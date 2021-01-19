@@ -337,12 +337,23 @@ def train(flags):  # pylint: disable=too-many-branches, too-many-statements
     B = flags.batch_size
 
     flags.device = None
-    if not flags.disable_cuda and torch.cuda.is_available():
-        logging.info("Using CUDA.")
-        flags.device = torch.device("cuda")
-    else:
-        logging.info("Not using CUDA.")
-        flags.device = torch.device("cpu")
+    try:
+      # activate Cloud TPU core
+      #if ('COLAB_TPU_ADDR' in os.environ) and os.environ['COLAB_TPU_ADDR']:
+      # imports the torch_xla package
+      import torch_xla
+      import torch_xla.core.xla_model as xm
+      flags.device = torch.device(xm.xla_device())
+    except:
+      if not flags.disable_cuda and torch.cuda.is_available():
+          logging.info("Using CUDA.")
+          flags.device = torch.device("cuda")
+      else:
+          logging.info("Not using CUDA.")
+          flags.device = torch.device("cpu")
+  
+    print(flags.device)  
+
 
     env = create_env(flags)
 
